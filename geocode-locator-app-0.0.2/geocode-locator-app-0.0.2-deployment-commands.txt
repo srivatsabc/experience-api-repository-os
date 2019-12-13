@@ -8,11 +8,16 @@ docker push srivatsabc/geocode-locator-app:exp-api-v0.0.2
 oc edit namespace experience-api-ns
 scheduler.alpha.kubernetes.io/node-selector: experience-apis=allow
 
-oc label node node1.openshift.com kubernetes.io/experience-apis=allow
+oc label node node1.openshift.com experience-apis=allow
 
-oc label node node2.openshift.com kubernetes.io/experience-apis=allow
+oc label node node2.openshift.com experience-apis=allow
 
-oc label node master.openshift.com kubernetes.io/experience-apis=allow
+oc label node master.openshift.com experience-apis=allow
+
+===============================================================
+Enable connectivity between experience-api-ns pods and process-api-ns pods:
+===============================================================
+oc adm pod-network make-projects-global experience-api-ns process-api-ns
 
 ===============================================================================
 Remove images from local docker repo:
@@ -35,7 +40,7 @@ oc -n experience-api-ns get configmap
 ===============================================================
 Create deployment using yaml:
 ===============================================================
-oc apply -n experience-api-ns -f geocode-locator-deployment.yaml
+oc apply -n experience-api-ns -f geocode-locator-app-0.0.2-deployment.yaml
 
 ===============================================================
 Check deployments within namespace:
@@ -71,9 +76,9 @@ Delete service and deployment
 ===============================================================
 oc delete pod system-api-pod --namespace=experience-api-ns
 
-oc delete deployment geocode-locator-app --namespace=experience-api-ns
+oc delete deployment geocode-locator-app-v002 --namespace=experience-api-ns
 
-oc delete service geocode-locator-app --namespace=experience-api-ns
+oc delete service geocode-locator-app-v002 --namespace=experience-api-ns
 
 
 ========================= EXTRAS ======================================
