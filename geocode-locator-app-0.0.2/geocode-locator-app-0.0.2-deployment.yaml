@@ -1,0 +1,50 @@
+# ------------------------------------------------------------------------------
+# The deployment file considers master node also for targetting deployments
+# The following command needs to be set into both master node and worker nodes
+# kubectl label node k8s-master kubernetes.io/experience-apis=allow
+# ------------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: geocode-locator-app-v002
+spec:
+  selector:
+      matchLabels:
+        app: geocode-locator-app-v002
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: geocode-locator-app-v002
+    spec:
+      nodeSelector:
+        kubernetes.io/experience-apis: allow
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - geocode-locator-app-v002
+            topologyKey: "kubernetes.io/hostname"
+      # ----------------------------------
+      # will target master node deployment
+      #tolerations:
+      #  - key: "node-role.kubernetes.io/master"
+      #    operator: "Exists"
+      #    effect: "NoSchedule"
+      # ----------------------------------
+      containers:
+        - name: geocode-locator-app-v002
+          image: srivatsabc/geocode-locator-app:os-e-api-v0.0.2 #v 002 is for kubernetes cluster and v 001 is for dockerswarm. DB connection string changes
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8074
+          env:
+            - name: RUNTIME_ENV_TYPE #In order to help mule application pickup the right jdbc properties
+              valueFrom:
+                configMapKeyRef:
+                  name: geocode-locator-app-v002-config
+                  key: RUNTIME_ENV_TYPE

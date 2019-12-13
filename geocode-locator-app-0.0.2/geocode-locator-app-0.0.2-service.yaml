@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: geocode-locator-app-v002
+spec:
+  selector:
+    app: geocode-locator-app-v002
+  ports:
+  - port: 8074
+    nodePort: 30074
+  type: NodePort

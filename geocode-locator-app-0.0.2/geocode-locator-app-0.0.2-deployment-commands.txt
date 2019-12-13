@@ -1,0 +1,95 @@
+===============================================================================
+Build Code and Docker Container
+===============================================================================
+docker build -t srivatsabc/geocode-locator-app:exp-api-v0.0.2 .
+docker push srivatsabc/geocode-locator-app:exp-api-v0.0.2
+
+
+oc edit namespace experience-api-ns
+scheduler.alpha.kubernetes.io/node-selector: experience-apis=allow
+
+oc label node node1.openshift.com kubernetes.io/experience-apis=allow
+
+oc label node node2.openshift.com kubernetes.io/experience-apis=allow
+
+oc label node master.openshift.com kubernetes.io/experience-apis=allow
+
+===============================================================================
+Remove images from local docker repo:
+===============================================================================
+docker images
+docker rmi
+
+===============================================================
+Create namespace:
+===============================================================
+oc create namespace experience-api-ns
+
+===============================================================
+Create and verify configmap:
+===============================================================
+oc create -n experience-api-ns configmap geocode-locator-app-config --from-literal=RUNTIME_ENV_TYPE=k8s
+
+oc -n experience-api-ns get configmap
+
+===============================================================
+Create deployment using yaml:
+===============================================================
+oc apply -n experience-api-ns -f geocode-locator-deployment.yaml
+
+===============================================================
+Check deployments within namespace:
+===============================================================
+oc -n experience-api-ns get deployments
+
+===============================================================
+Check status of pods within namespace:
+===============================================================
+oc -n experience-api-ns get pods
+
+oc -n experience-api-ns get pods -o wide
+
+===============================================================
+Check service within namespace to access api:
+===============================================================
+oc -n experience-api-ns create -f geocode-locator-service.yaml
+
+===============================================================
+Check service within namespace:
+===============================================================
+oc -n experience-api-ns get svc
+
+
+===============================================================
+Access api on the service port:
+===============================================================
+http://127.0.0.1:30087/api/routes/LHR
+
+
+===============================================================
+Delete service and deployment
+===============================================================
+oc delete pod system-api-pod --namespace=experience-api-ns
+
+oc delete deployment geocode-locator-app --namespace=experience-api-ns
+
+oc delete service geocode-locator-app --namespace=experience-api-ns
+
+
+========================= EXTRAS ======================================
+
+docker exec -it 796ecbc1185d bash
+
+oc api-resources --namespaced=true
+
+oc exec -n experience-api-ns -it 796ecbc1185d -- /bin/bash
+
+mysql.system-of-records-ns.svc.cluste.local:3306
+
+Not Used
+
+oc apply -f deployment.yml
+
+oc expose -n nginx-namespace deployment/nginx-deployment --type="NodePort" --port 80
+
+http://nginx-deployment:31525
