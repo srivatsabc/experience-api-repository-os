@@ -8,11 +8,18 @@ docker push srivatsabc/geocode-locator-app:exp-api-v0.0.2
 oc edit namespace experience-api-ns
 scheduler.alpha.kubernetes.io/node-selector: experience-apis=allow
 
+oc label node node1.openshift.com kubernetes.io/experience-apis=allow
 oc label node node1.openshift.com experience-apis=allow
 
+oc label node node2.openshift.com kubernetes.io/experience-apis=allow
 oc label node node2.openshift.com experience-apis=allow
 
+oc label node master.openshift.com kubernetes.io/experience-apis=allow
 oc label node master.openshift.com experience-apis=allow
+
+/etc/origin/master/master-config.yaml
+defaultNodeSelector: ""
+
 
 ===============================================================
 Enable connectivity between experience-api-ns pods and process-api-ns pods:
@@ -57,7 +64,7 @@ oc -n experience-api-ns get pods -o wide
 ===============================================================
 Check service within namespace to access api:
 ===============================================================
-oc -n experience-api-ns create -f geocode-locator-service.yaml
+oc -n experience-api-ns create -f geocode-locator-app-0.0.2-service.yaml
 
 ===============================================================
 Check service within namespace:
