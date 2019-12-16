@@ -19,15 +19,8 @@ pipeline {
   }
 
   stages {
-     stage('Checkout') {
+     stage('Post Checkout') {
           steps {
-            checkout([$class: 'GitSCM',
-              branches: [[name: 'master']],
-              doGenerateSubmoduleConfigurations: false,
-              extensions: [[$class: 'SparseCheckoutPaths',  sparseCheckoutPaths:[[$class:'SparseCheckoutPath', path:"${git_subdirectory}/"]]]                        ],
-              submoduleCfg: [],
-              userRemoteConfigs: [[credentialsId: 'srivatsabc_git_login', url: "${git_repo_url}"]]])
-
             sh "ls -lat"
           }
       }
