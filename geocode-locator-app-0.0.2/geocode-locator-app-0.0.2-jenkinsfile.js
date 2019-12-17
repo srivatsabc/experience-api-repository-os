@@ -90,10 +90,23 @@ pipeline {
       }
     }
 
+    stage('Docker Create Image Stream') {
+      steps {
+        sh 'oc create is $DOCKER_REPO -n $OKD_NAMESPACE'
+      }
+    }
+
     stage('Docker Push to Internal Registry') {
       steps {
         sh "echo Pushing docker-registry.default.svc:5000/$OKD_NAMESPACE/$DOCKER_REPO:$DOCKER_TAG to Internal Registry"
         sh 'docker push docker-registry.default.svc:5000/$OKD_NAMESPACE/$DOCKER_REPO:$DOCKER_TAG'
+      }
+    }
+
+    stage('Delete Local Docker images') {
+      steps {
+        sh "docker rmi docker-registry.default.svc:5000/$OKD_NAMESPACE/$DOCKER_REPO:$DOCKER_TAG -f"
+        sh 'docker rmi $DOCKER_ID/$DOCKER_REPO:$DOCKER_TAG -f'
       }
     }
 

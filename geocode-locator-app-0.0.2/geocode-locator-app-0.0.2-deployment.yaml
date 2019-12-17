@@ -38,7 +38,7 @@ spec:
       # ----------------------------------
       containers:
         - name: geocode-locator-app-v002
-          image: geocode-locator-app:os-e-api-v0.0.2 #v 002 is for kubernetes cluster and v 001 is for dockerswarm. DB connection string changes
+          image: docker-registry.default.svc:5000/geocode-locator-app:os-e-api-v0.0.2 #v 002 is for kubernetes cluster and v 001 is for dockerswarm. DB connection string changes
           imagePullPolicy: Always
           ports:
             - containerPort: 8074
