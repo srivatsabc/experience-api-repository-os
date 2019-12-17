@@ -9,13 +9,12 @@ oc edit namespace experience-api-ns
 scheduler.alpha.kubernetes.io/node-selector: experience-apis=allow
 
 oc label node node1.openshift.com kubernetes.io/experience-apis=allow
-oc label node node1.openshift.com experience-apis=allow
-
 oc label node node2.openshift.com kubernetes.io/experience-apis=allow
-oc label node node2.openshift.com experience-apis=allow
-
 oc label node master.openshift.com kubernetes.io/experience-apis=allow
+
 oc label node master.openshift.com experience-apis=allow
+oc label node node1.openshift.com experience-apis=allow
+oc label node node2.openshift.com experience-apis=allow
 
 /etc/origin/master/master-config.yaml
 defaultNodeSelector: ""
