@@ -86,8 +86,7 @@ pipeline {
 
     stage('Docker Internal Registry login') {
       steps {
-        sh "token=`oc whoami -t`"
-        sh 'docker login -u okd-admin -p $token docker-registry.default.svc:5000'
+        sh 'docker login -u okd-admin -p `oc whoami -t` docker-registry.default.svc:5000'
       }
     }
 
