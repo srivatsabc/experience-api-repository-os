@@ -90,9 +90,17 @@ pipeline {
       }
     }
 
-    stage('Docker Create Image Stream') {
+    stage('Docker Create ImageStream') {
       steps {
-        sh 'oc create is $DOCKER_REPO -n $OKD_NAMESPACE'
+        sh 'echo oc create is $DOCKER_REPO -n $OKD_NAMESPACE'
+        statusCreate = sh(returnStatus: true, script: "oc create is $DOCKER_REPO -n $OKD_NAMESPACE")
+        if (statusCreate != 0){
+          sh "echo ImageStream $DOCKER_REPO already exists under $OKD_NAMESPACE ns"
+        }else{
+          stage('OpenShift ImageStream created'){
+            sh "echo OpenShift ImageStream successfully created"
+          }
+        }
       }
     }
 
