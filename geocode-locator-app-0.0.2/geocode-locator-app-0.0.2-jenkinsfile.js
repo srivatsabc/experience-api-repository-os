@@ -1,17 +1,22 @@
 pipeline {
 
   environment {
-     GIT_SUBDIRECTORY = "geocode-locator-app-0.0.2"
      GIT_REPO_URL = "https://github.com/srivatsabc/experience-api-repository-os.git"
-     OKD_APP = "geocode-locator-app-v002"
-     OKD_NAMESPACE = "experience-api-ns"
-     CONFIG_MAP = "geocode-locator-app-v002-config"
+     APP_PREFIX = "geocode-locator-app"
+     APP_VERSION = "0.0.2"
+     OKD_APP_VERSION = "-v002"
+     API_TYPE = "experience-api-ns"
+
+     GIT_SUBDIRECTORY = APP_PREFIX + "-" + APP_VERSION
+     OKD_APP = APP_PREFIX + OKD_APP_VERSION
+     CONFIG_MAP = OKD_APP + "-config"
      DOCKER_ID = "srivatsabc"
-     DOCKER_REPO = "geocode-locator-app"
+     DOCKER_REPO = APP_PREFIX
      DOCKER_TAG = "os-e-api-v0.0.2"
      DOCKER_PWD = "wipro123"
-     DEPLOYMENT_YAML = "geocode-locator-app-0.0.2-deployment.yaml"
-     SERVICE_YAML = "geocode-locator-app-0.0.2-service.yaml"
+     DEPLOYMENT_YAML = GIT_SUBDIRECTORY + "-deployment.yaml"
+     SERVICE_YAML = GIT_SUBDIRECTORY + "-service.yaml"
+     DOCKER_REGISTRY = "docker-registry.default.svc:5000"
    }
 
   agent {
@@ -19,6 +24,7 @@ pipeline {
   }
 
   stages {
+     def DEPLOYMENT_YAML
      stage('Checkout') {
           steps {
             checkout([$class: 'GitSCM',
@@ -35,17 +41,17 @@ pipeline {
     stage('OpenShift deployment delete') {
         steps {
           script {
-            sh "echo deleting the current OpenShift deployment $OKD_APP from namespace $OKD_NAMESPACE"
-            status = sh(returnStatus: true, script: "oc delete deployment $OKD_APP --namespace=$OKD_NAMESPACE")
+            sh "echo deleting the current OpenShift deployment $OKD_APP from namespace $API_TYPE"
+            status = sh(returnStatus: true, script: "oc delete deployment $OKD_APP --namespace=$API_TYPE")
             if (status == 0){
               stage('OpenShift service delete') {
                   script{
-                    sh "echo deleting the current OpenShift service $OKD_APP from namespace $OKD_NAMESPACE"
-                    status = sh(returnStatus: true, script: "oc delete service $OKD_APP --namespace=$OKD_NAMESPACE")
+                    sh "echo deleting the current OpenShift service $OKD_APP from namespace $API_TYPE"
+                    status = sh(returnStatus: true, script: "oc delete service $OKD_APP --namespace=$API_TYPE")
                     if (status == 0){
                       stage('Deleting current docker image from local repo'){
-                        sh "echo deleting docker image from local docker-registry.default.svc:5000/$OKD_NAMESPACE/$DOCKER_REPO:$DOCKER_TAG"
-                        status = sh(returnStatus: true, script: "docker rmi docker-registry.default.svc:5000/$OKD_NAMESPACE/$DOCKER_REPO:$DOCKER_TAG -f")
+                        sh "echo deleting docker image from local $DOCKER_REGISTRY/$API_TYPE/$DOCKER_REPO:$DOCKER_TAG"
+                        status = sh(returnStatus: true, script: "docker rmi $DOCKER_REGISTRY/$API_TYPE/$DOCKER_REPO:$DOCKER_TAG -f")
                         if (status == 0){
                           sh "echo Delete kube deployment service and docker image successfully"
                         }else{
@@ -79,24 +85,24 @@ pipeline {
 
     stage('Docker Image Re-Tag') {
       steps {
-        sh "echo docker tag $DOCKER_ID/$DOCKER_REPO:$DOCKER_TAG docker-registry.default.svc:5000/$OKD_NAMESPACE/$DOCKER_REPO:$DOCKER_TAG"
-        sh 'docker tag $DOCKER_ID/$DOCKER_REPO:$DOCKER_TAG docker-registry.default.svc:5000/$OKD_NAMESPACE/$DOCKER_REPO:$DOCKER_TAG'
+        sh "echo docker tag $DOCKER_ID/$DOCKER_REPO:$DOCKER_TAG $DOCKER_REGISTRY/$API_TYPE/$DOCKER_REPO:$DOCKER_TAG"
+        sh 'docker tag $DOCKER_ID/$DOCKER_REPO:$DOCKER_TAG $DOCKER_REGISTRY/$API_TYPE/$DOCKER_REPO:$DOCKER_TAG'
       }
     }
 
     stage('Docker Internal Registry login') {
       steps {
-        sh 'docker login -u okd-admin -p `oc whoami -t` docker-registry.default.svc:5000'
+        sh 'docker login -u okd-admin -p `oc whoami -t` $DOCKER_REGISTRY'
       }
     }
 
     stage('Docker Create ImageStream') {
       steps {
         script {
-          sh 'echo oc create is $DOCKER_REPO -n $OKD_NAMESPACE'
-          statusCreate = sh(returnStatus: true, script: "oc create is $DOCKER_REPO -n $OKD_NAMESPACE")
+          sh 'echo oc create is $DOCKER_REPO -n $API_TYPE'
+          statusCreate = sh(returnStatus: true, script: "oc create is $DOCKER_REPO -n $API_TYPE")
           if (statusCreate != 0){
-            sh "echo ImageStream $DOCKER_REPO already exists under $OKD_NAMESPACE ns"
+            sh "echo ImageStream $DOCKER_REPO already exists under $API_TYPE ns"
           }else{
             stage('OpenShift ImageStream created'){
               sh "echo OpenShift ImageStream successfully created"
@@ -108,14 +114,14 @@ pipeline {
 
     stage('Docker Push to Internal Registry') {
       steps {
-        sh "echo Pushing docker-registry.default.svc:5000/$OKD_NAMESPACE/$DOCKER_REPO:$DOCKER_TAG to Internal Registry"
-        sh 'docker push docker-registry.default.svc:5000/$OKD_NAMESPACE/$DOCKER_REPO:$DOCKER_TAG'
+        sh "echo Pushing $DOCKER_REGISTRY/$API_TYPE/$DOCKER_REPO:$DOCKER_TAG to Internal Registry"
+        sh 'docker push $DOCKER_REGISTRY/$API_TYPE/$DOCKER_REPO:$DOCKER_TAG'
       }
     }
 
     stage('Delete Local Docker images') {
       steps {
-        sh "docker rmi docker-registry.default.svc:5000/$OKD_NAMESPACE/$DOCKER_REPO:$DOCKER_TAG -f"
+        sh "docker rmi $DOCKER_REGISTRY/$API_TYPE/$DOCKER_REPO:$DOCKER_TAG -f"
         sh 'docker rmi $DOCKER_ID/$DOCKER_REPO:$DOCKER_TAG -f'
       }
     }
@@ -123,10 +129,10 @@ pipeline {
     stage('OpenShift configmap') {
         steps {
           script {
-            sh "echo creating oc create -n $OKD_NAMESPACE configmap $CONFIG_MAP --from-literal=RUNTIME_ENV_TYPE=k8s"
-            statusCreate = sh(returnStatus: true, script: "oc create -n $OKD_NAMESPACE configmap $CONFIG_MAP --from-literal=RUNTIME_ENV_TYPE=k8s")
+            sh "echo creating oc create -n $API_TYPE configmap $CONFIG_MAP --from-literal=RUNTIME_ENV_TYPE=k8s"
+            statusCreate = sh(returnStatus: true, script: "oc create -n $API_TYPE configmap $CONFIG_MAP --from-literal=RUNTIME_ENV_TYPE=k8s")
             if (statusCreate != 0){
-              sh "echo Unable to create $CONFIG_MAP in $OKD_NAMESPACE as it already exists"
+              sh "echo Unable to create $CONFIG_MAP in $API_TYPE as it already exists"
             }else{
               stage('OpenShift configmap created'){
                 sh "echo OpenShift configmap successfully created"
@@ -138,13 +144,13 @@ pipeline {
 
     stage('OpenShift deployment') {
       steps {
-        sh 'oc apply -n $OKD_NAMESPACE -f $GIT_SUBDIRECTORY/$DEPLOYMENT_YAML'
+        sh 'oc apply -n $API_TYPE -f $GIT_SUBDIRECTORY/$DEPLOYMENT_YAML'
       }
     }
 
     stage('OpenShift service') {
       steps {
-        sh 'oc apply -n $OKD_NAMESPACE -f $GIT_SUBDIRECTORY/$SERVICE_YAML'
+        sh 'oc apply -n $API_TYPE -f $GIT_SUBDIRECTORY/$SERVICE_YAML'
       }
     }
   }
