@@ -145,6 +145,7 @@ pipeline {
 
     stage('OpenShift deployment') {
       steps {
+        sh 'oc whoami'
         sh 'oc apply -n $OKD_NAMESPACE -f $GIT_SUBDIRECTORY/$DEPLOYMENT_YAML'
       }
     }

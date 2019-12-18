@@ -12,9 +12,10 @@ oc label node node1.openshift.com kubernetes.io/experience-apis=allow
 oc label node node2.openshift.com kubernetes.io/experience-apis=allow
 oc label node master.openshift.com kubernetes.io/experience-apis=allow
 
-oc label node master.openshift.com experience_api=allow
+oc label node master.openshift.com experience-apis=allow
 oc label node node1.openshift.com experience-apis=allow
 oc label node node2.openshift.com experience-apis=allow
+oc label node infra1.openshift.com experience-apis=allow
 
 /etc/origin/master/master-config.yaml
 defaultNodeSelector: ""
