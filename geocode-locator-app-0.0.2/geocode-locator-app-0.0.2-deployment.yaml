@@ -18,7 +18,7 @@ spec:
         app: geocode-locator-app-v002
     spec:
       nodeSelector:
-        experience-apis: allow
+        region: primary
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
